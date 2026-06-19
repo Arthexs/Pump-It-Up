@@ -1,0 +1,27 @@
+name: pump
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pandas
+  - numpy
+  - scikit-learn
+  - xgboost
+  - lightgbm
+  - shap
+  - matplotlib
+  - seaborn
+  - plotly
+  - folium
+  - joblib
+  - pydantic
+  - python-dotenv
+  - typer
+  - pytest
+  - pytest-cov
+  - mypy
+  - ruff
+  - pip
+  - pip:
+    - -e .
