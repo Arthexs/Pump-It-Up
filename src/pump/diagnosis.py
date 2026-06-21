@@ -42,8 +42,15 @@ class DiagnosisReport:
 def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
     n_missing = df.isna().sum()
     pct_missing = n_missing / len(df)
+    # pct_zero: fraction of rows that are exactly 0 (NaN for non-numeric columns)
+    pct_zero = (df.select_dtypes(include="number") == 0).sum() / len(df)
     return pd.DataFrame(
-        {"n_missing": n_missing, "pct_missing": pct_missing, "dtype": df.dtypes}
+        {
+            "n_missing": n_missing,
+            "pct_missing": pct_missing,
+            "pct_zero": pct_zero,
+            "dtype": df.dtypes,
+        }
     ).sort_values("pct_missing", ascending=False)
 
 
