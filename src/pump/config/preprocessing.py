@@ -56,6 +56,7 @@ class TargetEncoderConfig(BaseConfig):
     by replacing each category with the mean target value for that category.
     Only fitted on training data to avoid leakage.
     """
+
     columns: list[str] = Field(
         default_factory=list,
         description="High-cardinality columns to target-encode",
@@ -72,6 +73,7 @@ class ConstructionYearCleanerConfig(BaseConfig):
     Zero values in construction_year represent missing data.
     Replace them before any numeric imputation runs.
     """
+
     column: str = Field(default="construction_year")
     zero_replacement: Literal["nan", "median"] = Field(
         default="nan",

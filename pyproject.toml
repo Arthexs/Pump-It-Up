@@ -1,11 +1,11 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "pump-it-up"
 version = "0.1.0"
-description = "Tanzania water pump failure prediction — SIA consultancy case"
+description = "Tanzania water pump failure prediction — consultancy case"
 requires-python = ">=3.11"
 dependencies = [
     # Data

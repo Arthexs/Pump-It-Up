@@ -30,6 +30,7 @@ class PipelineConfig(BaseConfig):
             model={"type": "xgb", "n_estimators": 500, "learning_rate": 0.05},
         )
     """
+
     name: str = Field(..., description="Human-readable name; used as filename stem in store")
     preprocessing: list[dict] = Field(default_factory=list)
     features: list[dict] = Field(default_factory=list)

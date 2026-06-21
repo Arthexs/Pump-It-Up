@@ -9,6 +9,7 @@ class BaseConfig(BaseModel):
 
 class LogisticRegressionConfig(BaseConfig):
     """Baseline model — fast to fit, interpretable coefficients."""
+
     C: float = Field(default=1.0, gt=0, description="Inverse regularization strength")
     max_iter: int = Field(default=1000, gt=0)
     random_state: int = Field(default=42)
@@ -31,6 +32,7 @@ class XGBConfig(BaseConfig):
     Primary model. XGBoost handles mixed feature types well and typically
     tops the leaderboard on this dataset.
     """
+
     n_estimators: int = Field(default=500, gt=0)
     max_depth: int = Field(default=6, gt=0)
     learning_rate: float = Field(default=0.05, gt=0)

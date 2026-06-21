@@ -9,6 +9,7 @@ class BaseConfig(BaseModel):
 
 class EvaluationConfig(BaseConfig):
     """Top-level evaluation settings."""
+
     labels: list[str] = Field(
         default=["functional", "functional needs repair", "non functional"],
         description="Class labels in the order the model outputs them",
@@ -33,12 +34,13 @@ class CostMatrixConfig(BaseConfig):
       inspection trip — moderate cost.
     - 'needs repair' misclassifications sit in between.
     """
+
     matrix: list[list[float]] = Field(
         default=[
             # pred: func  needs_repair  non_func
-            [0.0,  1.0,         3.0],   # true: functional
-            [2.0,  0.0,         2.0],   # true: needs_repair
-            [5.0,  3.0,         0.0],   # true: non_functional
+            [0.0, 1.0, 3.0],  # true: functional
+            [2.0, 0.0, 2.0],  # true: needs_repair
+            [5.0, 3.0, 0.0],  # true: non_functional
         ],
         description="Cost[true][predicted] — tune these for the presentation",
     )
