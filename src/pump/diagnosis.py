@@ -110,9 +110,7 @@ def redundancy_report(df: pd.DataFrame, threshold: float = 0.95) -> pd.DataFrame
 
 def distribution_summary(df: pd.DataFrame) -> pd.DataFrame:
     numeric = df.select_dtypes(include="number")
-    desc = numeric.describe().T.rename(
-        columns={"25%": "p25", "50%": "median", "75%": "p75"}
-    )
+    desc = numeric.describe().T.rename(columns={"25%": "p25", "50%": "median", "75%": "p75"})
     desc["skew"] = numeric.skew()
     desc["kurtosis"] = numeric.kurtosis()
     return desc.sort_values("skew", key=abs, ascending=False)
@@ -241,10 +239,14 @@ def _diff_redundancy(before: pd.DataFrame, after: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for key, corr in b_map.items():
         col_a, col_b = tuple(key)
-        rows.append({
-            "col_a": col_a, "col_b": col_b, "correlation": corr,
-            "status": "unchanged" if key in a_map else "resolved",
-        })
+        rows.append(
+            {
+                "col_a": col_a,
+                "col_b": col_b,
+                "correlation": corr,
+                "status": "unchanged" if key in a_map else "resolved",
+            }
+        )
     for key, corr in a_map.items():
         if key not in b_map:
             col_a, col_b = tuple(key)
