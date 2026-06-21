@@ -36,7 +36,7 @@ class ZeroToNanCleaner(BaseEstimator, TransformerMixin):
     def __init__(self, cfg: ZeroToNanCleanerConfig | None = None) -> None:
         self.cfg = cfg or ZeroToNanCleanerConfig()
 
-    def fit(self, X: pd.DataFrame, y=None) -> "ZeroToNanCleaner":
+    def fit(self, X: pd.DataFrame, y=None) -> ZeroToNanCleaner:
         return self
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
@@ -56,7 +56,7 @@ class NumericImputer(BaseEstimator, TransformerMixin):
         self._cols: list[str] = []
         self._imputer: SimpleImputer | None = None
 
-    def fit(self, X: pd.DataFrame, y=None) -> "NumericImputer":
+    def fit(self, X: pd.DataFrame, y=None) -> NumericImputer:
         self._cols = (
             self.cfg.columns
             if self.cfg.columns
@@ -84,7 +84,7 @@ class CategoricalImputer(BaseEstimator, TransformerMixin):
         self._cols: list[str] = []
         self._fills: dict[str, object] = {}
 
-    def fit(self, X: pd.DataFrame, y=None) -> "CategoricalImputer":
+    def fit(self, X: pd.DataFrame, y=None) -> CategoricalImputer:
         self._cols = (
             self.cfg.columns
             if self.cfg.columns
@@ -120,7 +120,7 @@ class OrdinalEncoder(BaseEstimator, TransformerMixin):
         self._cols: list[str] = []
         self._encoder: _SklearnOrdinalEncoder | None = None
 
-    def fit(self, X: pd.DataFrame, y=None) -> "OrdinalEncoder":
+    def fit(self, X: pd.DataFrame, y=None) -> OrdinalEncoder:
         self._cols = (
             self.cfg.columns
             if self.cfg.columns
@@ -159,7 +159,7 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
         self._encodings: dict[str, dict] = {}
         self._global_means: dict[str, float] = {}
 
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> "TargetEncoder":
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> TargetEncoder:
         self._cols = (
             self.cfg.columns
             if self.cfg.columns
@@ -179,9 +179,8 @@ class TargetEncoder(BaseEstimator, TransformerMixin):
             # concat aligns on index so X and y_num don't need to be positionally matched
             combined = pd.concat([X[col].rename("cat"), y_num.rename("target")], axis=1)
             stats = combined.groupby("cat")["target"].agg(count="count", mean="mean")
-            stats["encoded"] = (
-                (stats["count"] * stats["mean"] + smoothing * global_mean)
-                / (stats["count"] + smoothing)
+            stats["encoded"] = (stats["count"] * stats["mean"] + smoothing * global_mean) / (
+                stats["count"] + smoothing
             )
             self._encodings[col] = stats["encoded"].to_dict()
             self._global_means[col] = global_mean

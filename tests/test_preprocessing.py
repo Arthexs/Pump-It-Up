@@ -20,7 +20,6 @@ from pump.preprocessing import (
 )
 from pump.registry import TRANSFORMERS
 
-
 # ── Shared helpers ─────────────────────────────────────────────────────────────
 
 
@@ -150,9 +149,7 @@ class TestCategoricalImputer:
 
     def test_explicit_columns_limits_scope(self):
         X = _cat_df(a=["x", None], b=["y", None])
-        result = CategoricalImputer(
-            CategoricalImputerConfig(columns=["a"])
-        ).fit_transform(X)
+        result = CategoricalImputer(CategoricalImputerConfig(columns=["a"])).fit_transform(X)
         assert result["a"].isna().sum() == 0
         assert result["b"].isna().sum() == 1
 
@@ -294,8 +291,13 @@ class TestTargetEncoder:
 class TestRegistry:
     def test_all_preprocessing_transformers_registered(self):
         keys = TRANSFORMERS.keys()
-        for name in ("zero_to_nan", "numeric_imputer", "categorical_imputer",
-                     "ordinal_encoder", "target_encoder"):
+        for name in (
+            "zero_to_nan",
+            "numeric_imputer",
+            "categorical_imputer",
+            "ordinal_encoder",
+            "target_encoder",
+        ):
             assert name in keys
 
     def test_get_returns_correct_class(self):
@@ -316,20 +318,20 @@ class TestIntegration:
         zero_to_nan → numeric_imputer → categorical_imputer
         → target_encoder → ordinal_encoder
         """
-        X = pd.DataFrame({
-            "construction_year": [0, 1990, 0, 2005],
-            "gps_height": [0.0, 150.0, np.nan, 200.0],
-            "funder": ["gov", "ngo", "gov", None],
-            "source": ["spring", "river", "spring", "lake"],
-        })
+        X = pd.DataFrame(
+            {
+                "construction_year": [0, 1990, 0, 2005],
+                "gps_height": [0.0, 150.0, np.nan, 200.0],
+                "funder": ["gov", "ngo", "gov", None],
+                "source": ["spring", "river", "spring", "lake"],
+            }
+        )
         y = pd.Series(["functional", "non functional", "functional", "non functional"])
 
         X = ZeroToNanCleaner().fit_transform(X)
         X = NumericImputer().fit_transform(X)
         X = CategoricalImputer().fit_transform(X)
-        X = TargetEncoder(
-            TargetEncoderConfig(columns=["funder"])
-        ).fit(X, y).transform(X)
+        X = TargetEncoder(TargetEncoderConfig(columns=["funder"])).fit(X, y).transform(X)
         X = OrdinalEncoder().fit_transform(X)
 
         assert X.isna().sum().sum() == 0
