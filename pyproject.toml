@@ -71,5 +71,4 @@ ignore_missing_imports = true
 # ── Pytest ──────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=pump --cov-report=term-missing"
-importmode = "importlib"
+addopts = "--cov=pump --cov-report=term-missing --import-mode=importlib"
