@@ -235,7 +235,6 @@ class XGBConfig(BaseConfig):
     learning_rate: float = Field(default=0.05, gt=0)
     subsample: float = Field(default=0.8, gt=0, le=1)
     colsample_bytree: float = Field(default=0.8, gt=0, le=1)
-    use_label_encoder: bool = Field(default=False)
     eval_metric: str = Field(default="mlogloss")
     random_state: int = Field(default=42)
     n_jobs: int = Field(default=-1)
