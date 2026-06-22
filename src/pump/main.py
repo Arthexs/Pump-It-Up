@@ -553,6 +553,7 @@ def visualize(
 
 def _save_fig(fig, path: Path) -> None:
     import matplotlib.pyplot as plt
+
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
     typer.echo(f"  Saved {path.name}")
