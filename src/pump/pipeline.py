@@ -57,6 +57,7 @@ def build_pipeline(config: PipelineConfig) -> Pipeline:
         name, transformer = _resolve_transformer(spec)
         steps.append((unique_name(name), transformer))
 
-    steps.append(("model", _resolve_estimator(config.model)))
+    if config.model is not None:
+        steps.append(("model", _resolve_estimator(config.model)))
 
     return Pipeline(steps)

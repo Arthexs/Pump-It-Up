@@ -359,4 +359,7 @@ class PipelineConfig(BaseConfig):
     name: str = Field(..., description="Human-readable name; used as filename stem in store")
     preprocessing: list[dict] = Field(default_factory=list)
     features: list[dict] = Field(default_factory=list)
-    model: dict = Field(..., description="Must contain 'type' key matching a registered estimator")
+    model: dict | None = Field(
+        default=None,
+        description="Must contain 'type' key matching a registered estimator; None for preprocessing-only configs",
+    )
