@@ -121,12 +121,16 @@ def diagnose(
         # Highlight what changed most.
         typer.echo("\n-- Columns with most missing change after transform --")
         miss_diff = diff["missing"].dropna(subset=["pct_change"])
-        miss_diff = miss_diff[miss_diff["pct_change"].abs() > 0].sort_values(
-            "pct_change", key=abs, ascending=False
-        ).head(10)
+        miss_diff = (
+            miss_diff[miss_diff["pct_change"].abs() > 0]
+            .sort_values("pct_change", key=abs, ascending=False)
+            .head(10)
+        )
         if len(miss_diff):
             for col, row in miss_diff.iterrows():
-                typer.echo(f"  {col:<35} {row['pct_missing_before']:.1%} -> {row['pct_missing_after']:.1%}")
+                typer.echo(
+                    f"  {col:<35} {row['pct_missing_before']:.1%} -> {row['pct_missing_after']:.1%}"
+                )
         else:
             typer.echo("  (no change)")
 
@@ -135,7 +139,9 @@ def diagnose(
         changed = enc_diff[enc_diff.get("encoding_changed", False)]
         if len(changed):
             for col, row in changed.iterrows():
-                typer.echo(f"  {col:<35} {row['suggested_encoding_before']} -> {row['suggested_encoding_after']}")
+                typer.echo(
+                    f"  {col:<35} {row['suggested_encoding_before']} -> {row['suggested_encoding_after']}"
+                )
         else:
             typer.echo("  (none)")
 
