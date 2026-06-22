@@ -8,12 +8,11 @@ against ESTIMATORS.
 
 from __future__ import annotations
 
+from sklearn.pipeline import Pipeline
+
 import pump.features  # noqa: F401 — registers TRANSFORMERS/SELECTORS entries
 import pump.models  # noqa: F401 — registers ESTIMATORS entries
 import pump.preprocessing  # noqa: F401 — registers TRANSFORMERS entries
-
-from sklearn.pipeline import Pipeline
-
 from pump.configs import PipelineConfig
 from pump.registry import ESTIMATORS, SELECTORS, TRANSFORMERS
 
@@ -22,7 +21,7 @@ def _resolve_transformer(spec: dict) -> tuple[str, object]:
     spec = dict(spec)
     step_type = spec.pop("type")
     for registry in (TRANSFORMERS, SELECTORS):
-        if step_type in registry.keys():
+        if step_type in registry._registry:
             cls = registry.get(step_type)
             cfg = registry._configs[step_type](**spec)
             return step_type, cls(cfg)

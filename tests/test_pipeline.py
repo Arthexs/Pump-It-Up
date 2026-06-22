@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from pydantic import ValidationError
 from sklearn.pipeline import Pipeline
 
 from pump.configs import PipelineConfig
@@ -128,7 +129,7 @@ class TestBuildPipelineErrors:
             features=[],
             model={"type": "random_forest", "n_estimators": 10},
         )
-        with pytest.raises(Exception):  # pydantic ValidationError
+        with pytest.raises(ValidationError):
             build_pipeline(cfg)
 
     def test_invalid_model_param_raises_validation_error(self):
@@ -138,7 +139,7 @@ class TestBuildPipelineErrors:
             features=[],
             model={"type": "random_forest", "bad_param": 99},
         )
-        with pytest.raises(Exception):  # pydantic ValidationError
+        with pytest.raises(ValidationError):
             build_pipeline(cfg)
 
 
