@@ -315,6 +315,20 @@ class SHAPConfig(BaseConfig):
     )
 
 
+# ── Tuning ────────────────────────────────────────────────────────────────────
+
+
+class TuningConfig(BaseConfig):
+    """Settings for Optuna hyperparameter search."""
+
+    n_trials: int = Field(default=40, gt=0, description="Number of Optuna trials")
+    cv_folds: int = Field(default=3, ge=2, description="Stratified CV folds")
+    timeout: int | None = Field(
+        default=None, description="Wall-clock limit in seconds; None = unlimited"
+    )
+    random_state: int = Field(default=42)
+
+
 # ── Pipeline ──────────────────────────────────────────────────────────────────
 
 
