@@ -1,15 +1,67 @@
 {
   "name": "logistic_regression",
   "preprocessing": [
-    {"type": "zero_to_nan"},
-    {"type": "numeric_imputer"},
-    {"type": "categorical_imputer"},
-    {"type": "ordinal_encoder"}
+    {
+      "type": "zero_to_nan",
+      "columns": ["construction_year", "gps_height", "population"]
+    },
+    {
+      "type": "numeric_imputer",
+      "strategy": "median"
+    },
+    {
+      "type": "categorical_imputer",
+      "strategy": "most_frequent",
+      "columns": ["public_meeting", "permit"]
+    },
+    {
+      "type": "target_encoder",
+      "columns": ["funder", "installer"],
+      "smoothing": 1.0
+    },
+    {
+      "type": "ordinal_encoder"
+    }
   ],
   "features": [
-    {"type": "redundant_dropper"},
-    {"type": "pump_age"},
-    {"type": "variance_threshold", "threshold": 0.01}
+    {
+      "type": "pump_age"
+    },
+    {
+      "type": "redundant_dropper",
+      "columns_to_drop": [
+        "extraction_type_group",
+        "extraction_type_class",
+        "payment_type",
+        "quantity_group",
+        "quality_group",
+        "source_type",
+        "source_class",
+        "waterpoint_type_group",
+        "recorded_by",
+        "wpt_name",
+        "num_private",
+        "region_code",
+        "district_code",
+        "subvillage",
+        "scheme_name",
+        "scheme_management",
+        "ward",
+        "date_recorded",
+        "lga",
+        "region",
+        "amount_tsh",
+        "management",
+        "construction_year"
+      ]
+    },
+    {
+      "type": "geo_cluster",
+      "n_clusters": 20
+    },
+    {"type": "numeric_imputer", "strategy": "median"},
+    {"type": "variance_threshold", "threshold": 0.01},
+    {"type": "correlation_threshold", "threshold": 0.95, "method": "spearman"}
   ],
   "model": {
     "type": "logistic_regression",

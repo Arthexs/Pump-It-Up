@@ -134,6 +134,35 @@ pump evaluate xgb --latest --n-splits 10 \
   --features data/processed/train_values.csv --labels data/processed/train_labels.csv
 ```
 
+### Visualize
+
+Generate all charts and the interactive pump map for one or more trained models:
+
+```bash
+# All four models at once (pass multiple names as positional args)
+pump visualize xgb lgbm random_forest logistic_regression --latest
+
+# Single model, custom figure directory
+pump visualize xgb --latest --output-dir artifacts/figures/run1
+
+# Change the number of features shown in the importance chart
+pump visualize xgb --latest --top-n 30
+```
+
+Reads test data from `data/processed/test_values.csv` / `test_labels.csv` by default.
+
+Saves to `artifacts/figures/`:
+
+| File | Description |
+| --- | --- |
+| `class_distribution.png` | Bar chart of training-set label counts and percentages |
+| `cost_matrix.png` | Asymmetric business cost matrix heatmap |
+| `model_comparison.png` | Grouped bar chart of accuracy and F1-macro across all models |
+| `confusion_matrix_<name>.png` | Normalised confusion matrix per model |
+| `per_class_<name>.png` | Precision / recall / F1 per class per model |
+| `feature_importance_<name>.png` | Top-N feature importances per model |
+| `pump_map_<name>.html` | Interactive Folium map of Tanzania pump locations coloured by predicted status |
+
 ### Predict
 
 Generate a competition-ready submission CSV from the unlabeled test set:
@@ -181,7 +210,7 @@ docker run --rm \
 
 ## Project Structure
 
-```
+```text
 pump-it-up/
 ├── configs/                  # PipelineConfig JSON files
 │   ├── xgb.json
@@ -210,6 +239,7 @@ pump-it-up/
 ├── artifacts/
 │   ├── models/               # versioned .joblib files (gitignored)
 │   ├── reports/              # diagnosis CSVs
+│   ├── figures/              # charts and maps from pump visualize
 │   └── submissions/          # prediction CSVs
 ├── environment.yml
 └── pyproject.toml
