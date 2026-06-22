@@ -16,6 +16,7 @@ dependencies:
   - plotly
   - folium
   - joblib
+  - optuna
   - pydantic
   - python-dotenv
   - typer
