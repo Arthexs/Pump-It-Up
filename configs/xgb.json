@@ -1,0 +1,22 @@
+{
+  "name": "xgb",
+  "preprocessing": [
+    {"type": "zero_to_nan"},
+    {"type": "numeric_imputer"},
+    {"type": "categorical_imputer"},
+    {"type": "ordinal_encoder"}
+  ],
+  "features": [
+    {"type": "redundant_dropper"},
+    {"type": "pump_age"},
+    {"type": "geo_cluster", "n_clusters": 20}
+  ],
+  "model": {
+    "type": "xgb",
+    "n_estimators": 500,
+    "max_depth": 6,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8
+  }
+}
