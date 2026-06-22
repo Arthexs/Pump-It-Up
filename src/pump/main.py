@@ -16,8 +16,8 @@ import typer
 
 from pump import store
 from pump.configs import PipelineConfig, TuningConfig
-from pump.data import load_dataset, load_features
-from pump.evaluation import cross_val_eval
+from pump.data import load_dataset, load_features, split_dataset
+from pump.evaluation import cross_val_eval, holdout_eval
 from pump.pipeline import build_pipeline
 
 app = typer.Typer(add_completion=False, pretty_exceptions_short=True)
@@ -196,6 +196,62 @@ def _print_summary(report) -> None:
             typer.echo(f"  {label:<30} {row['count']:>6,}  ({row['pct']:.1%})")
 
 
+@app.command()
+def split(
+    features: Annotated[
+        Path,
+        typer.Option("--features", help="Raw features CSV to split"),
+    ] = Path(_DEFAULT_FEATURES),
+    labels: Annotated[
+        Path,
+        typer.Option("--labels", help="Raw labels CSV to split"),
+    ] = Path(_DEFAULT_LABELS),
+    test_size: Annotated[
+        float,
+        typer.Option("--test-size", help="Fraction of data held out as the test set"),
+    ] = 0.2,
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", help="Directory to write the four split CSVs"),
+    ] = Path("data/processed"),
+    random_state: Annotated[
+        int,
+        typer.Option("--random-state"),
+    ] = 42,
+) -> None:
+    """Stratified train/test split of the labeled dataset; saves four CSVs to output_dir."""
+    typer.echo(f"Loading: {features} / {labels}")
+    X_train, X_test, y_train, y_test = split_dataset(
+        str(features),
+        str(labels),
+        str(output_dir),
+        test_size=test_size,
+        random_state=random_state,
+    )
+    typer.echo(f"  Train: {len(X_train):,} rows")
+    typer.echo(f"  Test:  {len(X_test):,} rows  ({test_size:.0%} holdout)")
+    typer.echo("\n-- Class distribution (train / test) --")
+    for cls in sorted(y_train.unique()):
+        n_tr = (y_train == cls).sum()
+        n_te = (y_test == cls).sum()
+        typer.echo(
+            f"  {cls:<30} {n_tr:>6,} ({n_tr / len(y_train):.1%}) / {n_te:>5,} ({n_te / len(y_test):.1%})"
+        )
+    typer.echo(f"\nSaved to {output_dir}/")
+    typer.echo("  train_values.csv, train_labels.csv")
+    typer.echo("  test_values.csv,  test_labels.csv")
+    typer.echo("\nNext steps:")
+    typer.echo(
+        f"  pump train    --features {output_dir}/train_values.csv --labels {output_dir}/train_labels.csv --config configs/xgb.json"
+    )
+    typer.echo(
+        f"  pump evaluate MODEL --features {output_dir}/train_values.csv --labels {output_dir}/train_labels.csv"
+    )
+    typer.echo(
+        f"  pump evaluate MODEL --features {output_dir}/test_values.csv  --labels {output_dir}/test_labels.csv --holdout"
+    )
+
+
 def _resolve_pipeline(model: str, *, latest: bool, models_dir: Path):
     """Load a pipeline from store, or exit with a clean error message."""
     try:
@@ -296,26 +352,39 @@ def evaluate(
     ] = Path(_DEFAULT_LABELS),
     n_splits: Annotated[
         int,
-        typer.Option("--n-splits", help="Stratified-KFold splits"),
+        typer.Option("--n-splits", help="Stratified-KFold splits (ignored with --holdout)"),
     ] = 5,
+    holdout: Annotated[
+        bool,
+        typer.Option(
+            "--holdout/--no-holdout",
+            help="Score the already-fitted pipeline directly on the provided data (no CV refitting)",
+        ),
+    ] = False,
     models_dir: Annotated[
         Path,
         typer.Option("--models-dir"),
     ] = Path(_DEFAULT_MODELS_DIR),
 ) -> None:
-    """Cross-validate a saved pipeline and print accuracy, F1, and cost metrics."""
+    """Cross-validate a saved pipeline, or score it directly on a held-out set with --holdout."""
     pipe = _resolve_pipeline(model, latest=latest, models_dir=models_dir)
 
     typer.echo(f"Loading data: {features} / {labels}")
     X, y = load_dataset(str(features), str(labels))
     typer.echo(f"  {len(X):,} rows")
 
-    typer.echo(f"Running {n_splits}-fold cross-validation ...")
-    results = cross_val_eval(pipe, X, y, n_splits=n_splits)
-
-    typer.echo("\n-- Cross-validation results --")
-    for key in sorted(results):
-        typer.echo(f"  {key:<24} {results[key]:.4f}")
+    if holdout:
+        typer.echo("Scoring on held-out set ...")
+        results = holdout_eval(pipe, X, y)
+        typer.echo("\n-- Holdout results --")
+        for key in sorted(results):
+            typer.echo(f"  {key:<24} {results[key]:.4f}")
+    else:
+        typer.echo(f"Running {n_splits}-fold cross-validation ...")
+        results = cross_val_eval(pipe, X, y, n_splits=n_splits)
+        typer.echo("\n-- Cross-validation results --")
+        for key in sorted(results):
+            typer.echo(f"  {key:<24} {results[key]:.4f}")
 
 
 @app.command()

@@ -111,3 +111,23 @@ def cross_val_eval(
         result[f"{k}_mean"] = float(np.mean(vals))
         result[f"{k}_std"] = float(np.std(vals))
     return result
+
+
+def holdout_eval(
+    pipeline: Pipeline,
+    X: pd.DataFrame,
+    y: pd.Series,
+    eval_cfg: EvaluationConfig | None = None,
+    cost_cfg: CostMatrixConfig | None = None,
+) -> dict[str, float]:
+    """Score an already-fitted pipeline on a held-out set without refitting."""
+    ecfg = eval_cfg if eval_cfg is not None else EvaluationConfig()
+    ccfg = cost_cfg if cost_cfg is not None else CostMatrixConfig()
+    y_pred = pipeline.predict(X)
+    m = compute_metrics(y, y_pred, ecfg)
+    return {
+        "accuracy": float(m["accuracy"]),
+        "f1_macro": float(m["f1_macro"]),
+        "f1_weighted": float(m["f1_weighted"]),
+        "cost": cost_score(y, y_pred, ecfg, ccfg),
+    }
