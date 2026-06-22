@@ -222,8 +222,11 @@ def split(
     """Stratified train/test split of the labeled dataset; saves four CSVs to output_dir."""
     typer.echo(f"Loading: {features} / {labels}")
     X_train, X_test, y_train, y_test = split_dataset(
-        str(features), str(labels), str(output_dir),
-        test_size=test_size, random_state=random_state,
+        str(features),
+        str(labels),
+        str(output_dir),
+        test_size=test_size,
+        random_state=random_state,
     )
     typer.echo(f"  Train: {len(X_train):,} rows")
     typer.echo(f"  Test:  {len(X_test):,} rows  ({test_size:.0%} holdout)")
@@ -231,14 +234,22 @@ def split(
     for cls in sorted(y_train.unique()):
         n_tr = (y_train == cls).sum()
         n_te = (y_test == cls).sum()
-        typer.echo(f"  {cls:<30} {n_tr:>6,} ({n_tr/len(y_train):.1%}) / {n_te:>5,} ({n_te/len(y_test):.1%})")
+        typer.echo(
+            f"  {cls:<30} {n_tr:>6,} ({n_tr / len(y_train):.1%}) / {n_te:>5,} ({n_te / len(y_test):.1%})"
+        )
     typer.echo(f"\nSaved to {output_dir}/")
     typer.echo("  train_values.csv, train_labels.csv")
     typer.echo("  test_values.csv,  test_labels.csv")
     typer.echo("\nNext steps:")
-    typer.echo(f"  pump train    --features {output_dir}/train_values.csv --labels {output_dir}/train_labels.csv --config configs/xgb.json")
-    typer.echo(f"  pump evaluate MODEL --features {output_dir}/train_values.csv --labels {output_dir}/train_labels.csv")
-    typer.echo(f"  pump evaluate MODEL --features {output_dir}/test_values.csv  --labels {output_dir}/test_labels.csv --holdout")
+    typer.echo(
+        f"  pump train    --features {output_dir}/train_values.csv --labels {output_dir}/train_labels.csv --config configs/xgb.json"
+    )
+    typer.echo(
+        f"  pump evaluate MODEL --features {output_dir}/train_values.csv --labels {output_dir}/train_labels.csv"
+    )
+    typer.echo(
+        f"  pump evaluate MODEL --features {output_dir}/test_values.csv  --labels {output_dir}/test_labels.csv --holdout"
+    )
 
 
 def _resolve_pipeline(model: str, *, latest: bool, models_dir: Path):
