@@ -434,4 +434,125 @@ def predict(
         output.parent.mkdir(parents=True, exist_ok=True)
 
     pd.DataFrame({"id": X_test.index, "status_group": preds}).to_csv(output, index=False)
-    typer.echo(f"Submission saved → {output}  ({len(X_test):,} rows)")
+    typer.echo(f"Submission saved -> {output}  ({len(X_test):,} rows)")
+
+
+@app.command()
+def visualize(
+    models: Annotated[
+        list[str],
+        typer.Argument(help="One or more model stems or names (use --latest for name lookup)"),
+    ],
+    latest: Annotated[
+        bool,
+        typer.Option("--latest/--no-latest", help="Load most recent model matching each name"),
+    ] = False,
+    features: Annotated[
+        Path,
+        typer.Option("--features", help="Test features CSV (must retain raw lat/lon columns)"),
+    ] = Path("data/processed/test_values.csv"),
+    labels: Annotated[
+        Path,
+        typer.Option("--labels", help="Test labels CSV"),
+    ] = Path("data/processed/test_labels.csv"),
+    train_labels: Annotated[
+        Path,
+        typer.Option("--train-labels", help="Training labels CSV for the class distribution chart"),
+    ] = Path(_DEFAULT_LABELS),
+    top_n: Annotated[
+        int,
+        typer.Option("--top-n", help="Number of features to show in the importance chart"),
+    ] = 20,
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", help="Directory to save figures"),
+    ] = Path("artifacts/figures"),
+    models_dir: Annotated[
+        Path,
+        typer.Option("--models-dir"),
+    ] = Path(_DEFAULT_MODELS_DIR),
+) -> None:
+    """Generate all visualizations for one or more models and save to output_dir."""
+    from pump import visualizations as viz
+    from pump.data import load_labels
+    from pump.evaluation import compute_metrics, confusion_matrix_df
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # ── Data-only charts (no model needed) ───────────────────────────────────
+    typer.echo("Generating class distribution ...")
+    if train_labels.exists():
+        fig = viz.class_distribution(load_labels(str(train_labels)))
+        _save_fig(fig, output_dir / "class_distribution.png")
+    else:
+        typer.echo(f"  Skipping: {train_labels} not found")
+
+    typer.echo("Generating cost matrix ...")
+    fig = viz.cost_matrix_heatmap()
+    _save_fig(fig, output_dir / "cost_matrix.png")
+
+    # ── Load test data and run each model ────────────────────────────────────
+    typer.echo(f"\nLoading test data: {features} / {labels}")
+    X_test, y_test = load_dataset(str(features), str(labels))
+    typer.echo(f"  {len(X_test):,} rows")
+
+    model_results: dict[str, dict] = {}
+    pipelines: dict[str, object] = {}
+
+    for name in models:
+        typer.echo(f"\nLoading '{name}' ...")
+        pipe = _resolve_pipeline(name, latest=latest, models_dir=models_dir)
+        pipelines[name] = pipe
+        y_pred = pipe.predict(X_test)
+        m = compute_metrics(y_test, y_pred)
+        model_results[name] = {
+            "accuracy": m["accuracy"],
+            "f1_macro": m["f1_macro"],
+            "f1_weighted": m["f1_weighted"],
+            "per_class": m["per_class"],
+            "y_pred": y_pred,
+        }
+        typer.echo(f"  accuracy={m['accuracy']:.4f}  f1_macro={m['f1_macro']:.4f}")
+
+    # ── Model comparison (meaningful with >= 2 models, works with 1 too) ─────
+    typer.echo("\nGenerating model comparison ...")
+    scalar = {
+        n: {k: v for k, v in r.items() if k not in ("per_class", "y_pred")}
+        for n, r in model_results.items()
+    }
+    fig = viz.model_comparison(scalar)
+    _save_fig(fig, output_dir / "model_comparison.png")
+
+    # ── Per-model charts ──────────────────────────────────────────────────────
+    for name, result in model_results.items():
+        safe = name.replace("/", "_").replace("\\", "_")
+        typer.echo(f"\nGenerating plots for '{name}' ...")
+
+        fig = viz.confusion_matrix_heatmap(
+            confusion_matrix_df(y_test, result["y_pred"]), model_name=name
+        )
+        _save_fig(fig, output_dir / f"confusion_matrix_{safe}.png")
+
+        fig = viz.per_class_metrics(result["per_class"], model_name=name)
+        _save_fig(fig, output_dir / f"per_class_{safe}.png")
+
+        try:
+            fig = viz.feature_importance(pipelines[name], top_n=top_n, model_name=name)
+            _save_fig(fig, output_dir / f"feature_importance_{safe}.png")
+        except (ValueError, AttributeError) as exc:
+            typer.echo(f"  Skipping feature importance: {exc}")
+
+        typer.echo("  Generating pump map ...")
+        fmap = viz.pump_map(X_test, result["y_pred"])
+        map_path = output_dir / f"pump_map_{safe}.html"
+        fmap.save(str(map_path))
+        typer.echo(f"  Saved {map_path.name}")
+
+    typer.echo(f"\nAll figures saved to {output_dir}/")
+
+
+def _save_fig(fig, path: Path) -> None:
+    import matplotlib.pyplot as plt
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    typer.echo(f"  Saved {path.name}")
