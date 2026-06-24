@@ -1,6 +1,6 @@
 # Pump It Up — Tanzania Water Pump Failure Prediction
 
-SIA consultancy case: predict which water pumps are functional, need repair, or non-functional using the DrivenData competition dataset.
+Consultancy case: predict which water pumps are functional, need repair, or non-functional using the DrivenData competition dataset.
 
 ## Setup
 
